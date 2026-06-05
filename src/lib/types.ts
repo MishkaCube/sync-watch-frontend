@@ -1,7 +1,8 @@
 export type SourceType = 'youtube' | 'url' | 'file'
 
 export interface PlayerEvent {
-  type: 'play' | 'pause' | 'seek' | 'source-change' | 'source-reset' | 'buffering-start' | 'buffering-end'
+  type: 'play' | 'pause' | 'seek' | 'source-change' | 'source-reset'
+      | 'buffering-start' | 'buffering-end' | 'ready'
   currentTime: number
   senderId: string
   sourceType?: SourceType
