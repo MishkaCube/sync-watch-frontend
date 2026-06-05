@@ -87,13 +87,16 @@ export function useSync({
         // Both first-join and reconnect — fetch each piece independently so one
         // failure (e.g. room 404 after a server restart) doesn't block the rest.
 
-        // 1) source
+        // 1) source + live participant count (post-subscribe, so it includes us)
         let hasSource = false
         try {
           const room = await getRoom(roomId)
           if (room.lastSource) {
             onSourceRef.current(room.lastSource)
             hasSource = !!room.lastSource.sourceValue
+          }
+          if (typeof room.participantCount === 'number') {
+            onParticipantsRef.current(room.participantCount, room.participantCount)
           }
         } catch { /* room may be 404 — ignore */ }
 

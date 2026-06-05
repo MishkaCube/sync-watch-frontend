@@ -9,12 +9,13 @@ import WaitingOverlay from '../components/WaitingOverlay'
 import PartnerBufferingOverlay from '../components/PartnerBufferingOverlay'
 import BackendDownOverlay from '../components/BackendDownOverlay'
 import JoiningOverlay from '../components/JoiningOverlay'
+import RoomNotFound from '../components/RoomNotFound'
 import ChatPanel from '../components/ChatPanel'
 import Avatar from '../components/Avatar'
 import { useSync } from '../hooks/useSync'
 import { useRoomClock } from '../hooks/useRoomClock'
 import { useBackendHealth } from '../hooks/useBackendHealth'
-import { hlsWarmup, getConfig } from '../lib/api'
+import { hlsWarmup, getConfig, getRoom } from '../lib/api'
 import { toProxiedUrl } from '../lib/hls'
 import type { PlayerHandle } from '../components/YouTubePlayer'
 import type { ChatMessage, ClockEvent, PlayerEvent, SourceType } from '../lib/types'
@@ -39,6 +40,21 @@ export default function RoomPage() {
   const [rezkaEnabled, setRezkaEnabled] = useState(true)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [joining, setJoining] = useState(true)   // "connecting to session" overlay
+  const [roomStatus, setRoomStatus] = useState<'checking' | 'ok' | 'notfound'>('checking')
+
+  // Validate the room exists, and seed the live participant count
+  useEffect(() => {
+    if (!roomId) return
+    getRoom(roomId)
+      .then((room) => {
+        setRoomStatus('ok')
+        // seed count, but never clobber a fresher value already set via WS broadcast
+        if (typeof room.participantCount === 'number') {
+          setParticipants((prev) => Math.max(prev, room.participantCount))
+        }
+      })
+      .catch(() => setRoomStatus('notfound'))
+  }, [roomId])
 
   // safety: never trap the user behind the joining overlay
   useEffect(() => {
@@ -107,6 +123,11 @@ export default function RoomPage() {
       if (!hasSource) setJoining(false)
     }, []),
     onParticipants: useCallback((count: number, previousCount: number) => {
+      // equal values = a seed/refresh (not a real join/leave) → don't clobber a fresher value
+      if (count === previousCount) {
+        setParticipants((prev) => Math.max(prev, count))
+        return
+      }
       setParticipants(count)
       const someoneLeft = count < previousCount
       const someoneJoined = count > previousCount && count >= 2
@@ -190,10 +211,15 @@ export default function RoomPage() {
     navigate('/')
   }
 
+  // Room doesn't exist → show a friendly screen instead of joining a phantom room
+  if (roomStatus === 'notfound') {
+    return <RoomNotFound />
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       {!backendHealthy && <BackendDownOverlay />}
-      {joining && backendHealthy && <JoiningOverlay />}
+      {joining && backendHealthy && roomStatus === 'ok' && <JoiningOverlay />}
 
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-3 bg-gray-900 border-b border-gray-800">
