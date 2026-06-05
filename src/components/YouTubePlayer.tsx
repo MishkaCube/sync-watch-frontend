@@ -8,6 +8,8 @@ export interface PlayerHandle {
   setPlaybackRate: (rate: number) => void
   getCurrentTime: () => number
   getIsPlaying: () => boolean
+  /** seek to time + buffer; resolves when ready to play (or after a safety timeout) */
+  prepare: (time: number) => Promise<void>
 }
 
 interface Props {
@@ -47,6 +49,14 @@ const YouTubePlayer = forwardRef<PlayerHandle, Props>(({ videoId, onUserPlay, on
       const YT = (window as any).YT?.PlayerState
       return YT ? playerRef.current?.getPlayerState() === YT.PLAYING : false
     },
+    prepare: (t) => new Promise<void>((resolve) => {
+      const p = playerRef.current
+      if (!p) { resolve(); return }
+      suppress()
+      p.seekTo(t, true)
+      // YouTube manages its own buffer; give it a short window to load the seek target
+      setTimeout(resolve, 700)
+    }),
   }))
 
   useEffect(() => {

@@ -59,6 +59,7 @@ export default function RoomPage() {
   const sourceRef = useRef<Source | null>(null)
   const isHostRef = useRef(false)
   const localBuffering = useRef(false)
+  const wasPlayingRef = useRef(false)   // intended play state (for buffering resume)
   const lastActionRef = useRef(0)   // timestamp of last local play/pause/seek
 
   // Sync browser online/offline
@@ -92,12 +93,16 @@ export default function RoomPage() {
         setSource(null)
         sourceRef.current = null
         setClock(null)
+        setBufferingCount(0)         // clear any stuck "ждём партнёра" overlay
+        localBuffering.current = false
         return
       }
       if (event.sourceType && event.sourceValue) {
         const s = { type: event.sourceType, value: event.sourceValue }
         setSource(s)
         sourceRef.current = s
+        setBufferingCount(0)         // new source — reset buffering state
+        localBuffering.current = false
       }
     }, []),
     onBuffering: useCallback((count: number) => setBufferingCount(count), []),
@@ -105,6 +110,27 @@ export default function RoomPage() {
       // No video in the room yet → nothing to buffer, session is ready.
       // If there is a source, we keep the overlay until the player reports ready.
       if (!hasSource) setJoining(false)
+    }, []),
+    // ── Barrier: prepare → seek + buffer → tell server we're ready ──────────
+    onPrepare: useCallback((position: number) => {
+      const p = playerRef.current
+      const send = sendEventRef.current
+      if (!p) return
+      lastActionRef.current = Date.now()
+      p.pause()   // hold until everyone is ready (the initiator too)
+      p.prepare(position).then(() => {
+        send?.({ type: 'ready', currentTime: position })
+      })
+    }, []),
+    // ── Barrier: go → everyone starts together (already buffered) ───────────
+    onGo: useCallback((position: number) => {
+      const p = playerRef.current
+      if (!p) return
+      lastActionRef.current = Date.now()
+      wasPlayingRef.current = true
+      p.seekTo(position)
+      p.play()
+      setClock({ type: 'clock', position, playing: true, updatedAt: new Date().toISOString(), receivedAt: Date.now() })
     }, []),
     onParticipants: useCallback((count: number, previousCount: number) => {
       setParticipants(count)
@@ -146,7 +172,8 @@ export default function RoomPage() {
   function handleUserPlay(t: number) {
     const src = sourceRef.current
     if (src?.value.includes('/api/hls/manifest')) hlsWarmup(src.value, t)
-    optimisticClock(t, true)
+    // don't start locally — the server barrier will drive a synchronized start (prepare → go)
+    optimisticClock(t, false)
     sendEvent({ type: 'play', currentTime: t })
   }
   function handleUserPause(t: number) {
@@ -179,6 +206,7 @@ export default function RoomPage() {
     sendEvent({ type: 'source-reset', currentTime: 0 })
     // local clear (server also broadcasts back)
     setSource(null); sourceRef.current = null; setClock(null)
+    setBufferingCount(0); localBuffering.current = false
   }
 
   function copyLink() {

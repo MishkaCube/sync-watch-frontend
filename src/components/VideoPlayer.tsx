@@ -87,6 +87,24 @@ const VideoPlayer = forwardRef<PlayerHandle, Props>(({ src, onUserPlay, onUserPa
     },
     getCurrentTime:  () => videoRef.current?.currentTime ?? 0,
     getIsPlaying:    () => !(videoRef.current?.paused ?? true),
+    prepare: (t) => new Promise<void>((resolve) => {
+      const v = videoRef.current
+      if (!v) { resolve(); return }
+      suppress()
+      v.currentTime = t
+      // HAVE_FUTURE_DATA = enough buffered to start playing
+      if (v.readyState >= 3) { resolve(); return }
+      let done = false
+      const finish = () => { if (done) return; done = true; cleanup(); resolve() }
+      const cleanup = () => {
+        clearTimeout(safety)
+        v.removeEventListener('canplay', finish)
+        v.removeEventListener('canplaythrough', finish)
+      }
+      const safety = setTimeout(finish, 8000)   // never block the barrier forever
+      v.addEventListener('canplay', finish, { once: true })
+      v.addEventListener('canplaythrough', finish, { once: true })
+    }),
   }))
 
   // HLS setup
