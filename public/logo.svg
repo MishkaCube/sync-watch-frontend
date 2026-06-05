@@ -1,0 +1,27 @@
+<svg width="240" height="240" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="240" y2="240" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7C3AED"/>
+      <stop offset="1" stop-color="#4F1FB0"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="40" y1="40" x2="200" y2="200" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F0ABFC"/>
+      <stop offset="1" stop-color="#C4B5FD"/>
+    </linearGradient>
+  </defs>
+
+  <!-- rounded app-icon background -->
+  <rect width="240" height="240" rx="56" fill="url(#bg)"/>
+
+  <!-- sync ring: two arcs that chase each other -->
+  <g stroke="url(#ring)" stroke-width="12" stroke-linecap="round" fill="none">
+    <path d="M120 54 A66 66 0 0 1 186 120"/>
+    <path d="M120 186 A66 66 0 0 1 54 120"/>
+  </g>
+  <!-- arrow heads on the arcs -->
+  <path d="M186 120 l-13 -9 l16 -4 z" fill="#F0ABFC"/>
+  <path d="M54 120 l13 9 l-16 4 z" fill="#C4B5FD"/>
+
+  <!-- play triangle in the center -->
+  <path d="M102 96 L150 120 L102 144 Z" fill="#FFFFFF"/>
+</svg>
