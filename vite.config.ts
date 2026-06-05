@@ -7,6 +7,7 @@ export default defineConfig({
     global: 'globalThis',
   },
   server: {
+    port: process.env.PORT ? Number(process.env.PORT) : 5173,
     proxy: {
       '/api': 'http://localhost:8080',
       '/ws':  { target: 'http://localhost:8080', ws: true },

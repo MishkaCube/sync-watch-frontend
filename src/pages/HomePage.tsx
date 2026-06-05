@@ -26,13 +26,12 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-10 px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center gap-8 sm:gap-10 px-4 safe-top safe-bottom safe-x">
       {!backendHealthy && <BackendDownOverlay />}
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-white mb-2">
-          SyncWatch
-        </h1>
-        <p className="text-gray-400">Смотрите видео вместе, синхронно</p>
+      <div className="text-center flex flex-col items-center gap-3">
+        <img src="/logo.svg" alt="SyncWatch" className="w-16 h-16 sm:w-20 sm:h-20" />
+        <h1 className="text-3xl sm:text-4xl font-bold text-white">SyncWatch</h1>
+        <p className="text-gray-400 text-sm sm:text-base">Смотрите видео вместе, синхронно</p>
       </div>
 
       <div className="flex flex-col gap-4 w-full max-w-sm">

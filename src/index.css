@@ -57,6 +57,24 @@
   --a-500: 245 158 11;
 }
 
+html, body {
+  -webkit-text-size-adjust: 100%;   /* iOS: don't auto-zoom text */
+}
+
 body {
   @apply bg-gray-950 text-gray-100 min-h-screen;
+}
+
+/* respect iPhone notch / Dynamic Island / home indicator */
+.safe-top    { padding-top: env(safe-area-inset-top); }
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+.safe-x {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* iOS Safari zooms in when focusing an input with font-size < 16px.
+   Force 16px on small screens to prevent the jump. */
+@media (max-width: 640px) {
+  input, textarea, select { font-size: 16px !important; }
 }

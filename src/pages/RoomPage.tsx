@@ -252,49 +252,61 @@ export default function RoomPage() {
       {joining && backendHealthy && roomStatus === 'ok' && <JoiningOverlay />}
 
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-3 bg-gray-900 border-b border-gray-800">
-        <button onClick={handleHomeButton} className="flex items-center gap-2 font-semibold text-gray-200">
-          <img src="/logo.svg" alt="SyncWatch" className="w-7 h-7" />
-          SyncWatch
+      <div className="safe-top safe-x flex flex-wrap items-center justify-between gap-x-3 gap-y-2.5
+                      px-4 sm:px-6  bg-gray-900 border-b border-gray-800">
+        <button onClick={handleHomeButton} className="flex items-center gap-2 font-semibold text-gray-200 shrink-0 pr-2 py-4 px-4">
+          <img src="/logo.svg" alt="SyncWatch" className="w-8 h-8 sm:w-7 sm:h-7" />
+          <span className="hidden sm:inline">SyncWatch</span>
         </button>
-        <div className="flex items-center gap-3 text-sm text-gray-400">
+
+        <div className="flex items-center gap-2.5 sm:gap-3 text-sm text-gray-400 flex-wrap justify-end pr-4">
+          {/* connection: dot always, label only on ≥sm */}
           <span className={`flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full
             ${connected ? 'bg-green-900/50 text-green-400' : 'bg-red-900/50 text-red-400'}`}>
             <span className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-green-400' : 'bg-red-400 animate-pulse'}`} />
-            {connected ? 'Подключено' : 'Нет связи...'}
+            <span className="hidden sm:inline">{connected ? 'Подключено' : 'Нет связи...'}</span>
           </span>
+
+          {/* participants */}
           <span className="flex items-center -space-x-1.5">
             {Array.from({ length: Math.min(participants, 4) }).map((_, i) => (
               <Avatar
                 key={i}
-                // first slot = me (real seed), others stable per room slot
                 seed={i === 0 ? senderId : `${roomId}-${i}`}
                 size={24}
                 className="ring-2 ring-gray-900"
               />
             ))}
-            <span className="text-gray-500 pl-2.5">{participants} / 2</span>
+            <span className="text-gray-500 pl-2.5">{participants}/2</span>
           </span>
-          <span>Комната: <span className="font-mono text-violet-400">{roomId}</span></span>
+
+          {/* room code — label hidden on mobile */}
+          <span className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">Комната: </span>
+            <span className="font-mono text-violet-400">{roomId}</span>
+          </span>
+
           {source && (
-            <button onClick={handleResetSource}
-              className="px-3 py-1 bg-gray-800 hover:bg-red-900/60 hover:text-red-300 rounded-lg transition-colors">
-              ✕ Сбросить видео
+            <button onClick={handleResetSource} title="Сбросить видео"
+              className="px-3 py-2 sm:py-1 bg-gray-800 hover:bg-red-900/60 hover:text-red-300 rounded-lg transition-colors">
+              <span className="sm:hidden">✕</span>
+              <span className="hidden sm:inline">✕ Сбросить видео</span>
             </button>
           )}
           <button onClick={toggleTheme} title="Сменить тему"
-            className="px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors">
+            className="px-3 py-2 sm:py-1 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors">
             {theme === 'sunset' ? '🌙' : '☀️'}
           </button>
-          <button onClick={copyLink}
-            className="px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors">
-            {copied ? '✓ Скопировано' : 'Поделиться'}
+          <button onClick={copyLink} title="Поделиться"
+            className="px-3 py-2  sm:py-1 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors">
+            <span className="sm:hidden">{copied ? '✓' : '🔗'}</span>
+            <span className="hidden sm:inline">{copied ? '✓ Скопировано' : 'Поделиться'}</span>
           </button>
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex flex-col lg:flex-row gap-4 p-4">
+      <div className="flex-1 flex flex-col lg:flex-row gap-4 p-3 sm:p-4 safe-x safe-bottom">
         {/* Player */}
         <div className="flex-1 flex flex-col gap-4">
           <div className="relative">
