@@ -8,12 +8,14 @@ import VideoPlayer from '../components/VideoPlayer'
 import WaitingOverlay from '../components/WaitingOverlay'
 import PartnerBufferingOverlay from '../components/PartnerBufferingOverlay'
 import BackendDownOverlay from '../components/BackendDownOverlay'
+import ChatPanel from '../components/ChatPanel'
+import Avatar from '../components/Avatar'
 import { useSync } from '../hooks/useSync'
 import { useRoomClock } from '../hooks/useRoomClock'
 import { useBackendHealth } from '../hooks/useBackendHealth'
 import { hlsWarmup, getConfig } from '../lib/api'
 import type { PlayerHandle } from '../components/YouTubePlayer'
-import type { ClockEvent, PlayerEvent, SourceType } from '../lib/types'
+import type { ChatMessage, ClockEvent, PlayerEvent, SourceType } from '../lib/types'
 
 const senderId = uuidv4()
 
@@ -33,6 +35,7 @@ export default function RoomPage() {
   const [clock, setClock] = useState<ClockEvent | null>(null)
   const [bufferingCount, setBufferingCount] = useState(0)
   const [rezkaEnabled, setRezkaEnabled] = useState(true)
+  const [messages, setMessages] = useState<ChatMessage[]>([])
 
   // Load feature flags
   useEffect(() => {
@@ -64,10 +67,16 @@ export default function RoomPage() {
   useRoomClock(playerRef, clock, bufferingCount > 0)
 
   // ── WebSocket sync ─────────────────────────────────────────────────────────
-  const { sendEvent } = useSync({
+  const { sendEvent, sendChat } = useSync({
     roomId: roomId!,
     senderId,
     onClock: setClock,
+    onChat: useCallback((msg: ChatMessage) => {
+      setMessages((prev) => [...prev, msg])
+    }, []),
+    onChatHistory: useCallback((msgs: ChatMessage[]) => {
+      setMessages(msgs)
+    }, []),
     onSourceChange: useCallback((event: PlayerEvent) => {
       if (event.type === 'source-reset') {
         setSource(null)
@@ -179,13 +188,17 @@ export default function RoomPage() {
             <span className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-green-400' : 'bg-red-400 animate-pulse'}`} />
             {connected ? 'Подключено' : 'Нет связи...'}
           </span>
-          <span className="flex items-center gap-1.5">
+          <span className="flex items-center -space-x-1.5">
             {Array.from({ length: Math.min(participants, 4) }).map((_, i) => (
-              <span key={i} className="w-6 h-6 rounded-full bg-violet-700 flex items-center justify-center text-xs font-bold text-white">
-                {i + 1}
-              </span>
+              <Avatar
+                key={i}
+                // first slot = me (real seed), others stable per room slot
+                seed={i === 0 ? senderId : `${roomId}-${i}`}
+                size={24}
+                className="ring-2 ring-gray-900"
+              />
             ))}
-            <span className="text-gray-500">{participants} / 2</span>
+            <span className="text-gray-500 pl-2.5">{participants} / 2</span>
           </span>
           <span>Комната: <span className="font-mono text-violet-400">{roomId}</span></span>
           {source && (
@@ -258,6 +271,9 @@ export default function RoomPage() {
               ? <RezkaPicker onSource={handleSource} />
               : <SourcePicker roomId={roomId!} currentSource={source?.value} onSource={handleSource} />}
           </div>
+
+          {/* Chat */}
+          <ChatPanel messages={messages} myId={senderId} onSend={sendChat} />
         </div>
       </div>
     </div>

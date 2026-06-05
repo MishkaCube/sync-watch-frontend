@@ -27,6 +27,13 @@ export interface BufferingEvent {
   count: number   // how many clients are currently buffering
 }
 
+export interface ChatMessage {
+  type: 'chat'
+  senderId: string
+  text: string
+  ts: number      // server epoch millis
+}
+
 export interface Room {
   id: string
   createdAt: string

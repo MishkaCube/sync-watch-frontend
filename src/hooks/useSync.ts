@@ -1,7 +1,7 @@
 import { Client } from '@stomp/stompjs'
 import SockJS from 'sockjs-client'
 import { useCallback, useEffect, useRef } from 'react'
-import type { ClockEvent, ParticipantEvent, PlayerEvent } from '../lib/types'
+import type { ChatMessage, ClockEvent, ParticipantEvent, PlayerEvent } from '../lib/types'
 import { getRoom } from '../lib/api'
 
 interface UseSyncOptions {
@@ -11,13 +11,15 @@ interface UseSyncOptions {
   onSourceChange: (event: PlayerEvent) => void
   onParticipants: (count: number, previousCount: number) => void
   onBuffering?: (count: number) => void
+  onChat?: (msg: ChatMessage) => void
+  onChatHistory?: (msgs: ChatMessage[]) => void
   onDisconnect?: () => void
   onReconnect?: () => void
 }
 
 export function useSync({
   roomId, senderId,
-  onClock, onSourceChange, onParticipants, onBuffering,
+  onClock, onSourceChange, onParticipants, onBuffering, onChat, onChatHistory,
   onDisconnect, onReconnect,
 }: UseSyncOptions) {
   const clientRef       = useRef<Client | null>(null)
@@ -25,6 +27,8 @@ export function useSync({
   const onSourceRef     = useRef(onSourceChange)
   const onParticipantsRef = useRef(onParticipants)
   const onBufferingRef  = useRef(onBuffering)
+  const onChatRef       = useRef(onChat)
+  const onChatHistoryRef = useRef(onChatHistory)
   const onDisconnectRef = useRef(onDisconnect)
   const onReconnectRef  = useRef(onReconnect)
 
@@ -32,6 +36,8 @@ export function useSync({
   useEffect(() => { onSourceRef.current       = onSourceChange }, [onSourceChange])
   useEffect(() => { onParticipantsRef.current = onParticipants }, [onParticipants])
   useEffect(() => { onBufferingRef.current    = onBuffering    }, [onBuffering])
+  useEffect(() => { onChatRef.current         = onChat         }, [onChat])
+  useEffect(() => { onChatHistoryRef.current  = onChatHistory  }, [onChatHistory])
   useEffect(() => { onDisconnectRef.current   = onDisconnect   }, [onDisconnect])
   useEffect(() => { onReconnectRef.current    = onReconnect    }, [onReconnect])
 
@@ -60,6 +66,10 @@ export function useSync({
             onBufferingRef.current?.(data.count)
             return
           }
+          if (data.type === 'chat') {
+            onChatRef.current?.(data as ChatMessage)
+            return
+          }
           if (data.type === 'source-change' && data.senderId !== senderId) {
             onSourceRef.current(data as PlayerEvent)
             return
@@ -71,14 +81,29 @@ export function useSync({
           }
         })
 
-        // Both first-join and reconnect: fetch current source + clock from server
+        // Both first-join and reconnect — fetch each piece independently so one
+        // failure (e.g. room 404 after a server restart) doesn't block the rest.
+
+        // 1) source
         try {
           const room = await getRoom(roomId)
           if (room.lastSource) onSourceRef.current(room.lastSource)
+        } catch { /* room may be 404 — ignore */ }
+
+        // 2) clock
+        try {
           const res = await fetch(`/api/rooms/${roomId}/clock`)
           if (res.ok) {
             const clock = await res.json()
             onClockRef.current({ ...clock, receivedAt: Date.now() })
+          }
+        } catch { /* ignore */ }
+
+        // 3) chat history
+        try {
+          const chatRes = await fetch(`/api/rooms/${roomId}/chat`)
+          if (chatRes.ok) {
+            onChatHistoryRef.current?.(await chatRes.json())
           }
         } catch { /* ignore */ }
 
@@ -99,5 +124,14 @@ export function useSync({
     })
   }, [roomId, senderId])
 
-  return { sendEvent }
+  const sendChat = useCallback((text: string) => {
+    const trimmed = text.trim()
+    if (!trimmed) return
+    clientRef.current?.publish({
+      destination: `/app/room/${roomId}/event`,
+      body: JSON.stringify({ type: 'chat', text: trimmed, senderId, currentTime: 0 }),
+    })
+  }, [roomId, senderId])
+
+  return { sendEvent, sendChat }
 }
