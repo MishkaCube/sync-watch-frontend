@@ -169,7 +169,10 @@ export default function RoomPage() {
 
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-3 bg-gray-900 border-b border-gray-800">
-        <button onClick={handleHomeButton} className="font-semibold text-gray-200">SyncWatch</button>
+        <button onClick={handleHomeButton} className="flex items-center gap-2 font-semibold text-gray-200">
+          <img src="/logo.svg" alt="SyncWatch" className="w-7 h-7" />
+          SyncWatch
+        </button>
         <div className="flex items-center gap-3 text-sm text-gray-400">
           <span className={`flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full
             ${connected ? 'bg-green-900/50 text-green-400' : 'bg-red-900/50 text-red-400'}`}>
