@@ -9,11 +9,13 @@ const SEEK_THRESHOLD = 3.0    // seconds: hard seek if drift exceeds this
 const RATE_THRESHOLD = 0.3    // seconds: adjust speed if drift exceeds this
 const RATE_SLOW      = 0.92   // playback rate when ahead
 const RATE_FAST      = 1.08   // playback rate when behind
+const ACTION_GRACE_MS = 1500  // after a local user action, don't correct (let state settle)
 
 export function useRoomClock(
   playerRef: React.RefObject<PlayerHandle | null>,
   clock: ClockEvent | null,
   holdPaused: boolean = false,
+  lastActionRef?: React.MutableRefObject<number>,
 ) {
   const clockRef = useRef(clock)
   const holdRef  = useRef(holdPaused)
@@ -25,6 +27,12 @@ export function useRoomClock(
       const p = playerRef.current
       const c = clockRef.current
       if (!p || !c) return
+
+      // Just after a local action (play/pause/seek), stay out of the way so the
+      // optimistic clock can propagate to clockRef without the loop fighting it.
+      if (lastActionRef && Date.now() - lastActionRef.current < ACTION_GRACE_MS) {
+        return
+      }
 
       // While any client is buffering, keep paused — don't fight the hold
       if (holdRef.current) {

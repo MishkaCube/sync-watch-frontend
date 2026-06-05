@@ -50,6 +50,7 @@ export default function RoomPage() {
   const sourceRef = useRef<Source | null>(null)
   const isHostRef = useRef(false)
   const localBuffering = useRef(false)
+  const lastActionRef = useRef(0)   // timestamp of last local play/pause/seek
 
   // Sync browser online/offline
   useEffect(() => {
@@ -64,7 +65,7 @@ export default function RoomPage() {
   const backendHealthy = useBackendHealth()
 
   // ── Room clock loop ── (hold when anyone is buffering) ──────────────────────
-  useRoomClock(playerRef, clock, bufferingCount > 0)
+  useRoomClock(playerRef, clock, bufferingCount > 0, lastActionRef)
 
   // ── WebSocket sync ─────────────────────────────────────────────────────────
   const { sendEvent, sendChat } = useSync({
@@ -123,6 +124,7 @@ export default function RoomPage() {
   // Optimistically update the local clock so the clock loop doesn't fight
   // the user's own action while the server round-trip is in flight.
   function optimisticClock(position: number, playing: boolean) {
+    lastActionRef.current = Date.now()   // grace window: keep clock loop off our back
     setClock({ type: 'clock', position, playing, updatedAt: new Date().toISOString(), receivedAt: Date.now() })
   }
 
