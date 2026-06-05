@@ -15,6 +15,7 @@ import Avatar from '../components/Avatar'
 import { useSync } from '../hooks/useSync'
 import { useRoomClock } from '../hooks/useRoomClock'
 import { useBackendHealth } from '../hooks/useBackendHealth'
+import { useTheme } from '../hooks/useTheme'
 import { hlsWarmup, getConfig, getRoom } from '../lib/api'
 import { toProxiedUrl } from '../lib/hls'
 import type { PlayerHandle } from '../components/YouTubePlayer'
@@ -89,6 +90,7 @@ export default function RoomPage() {
 
   // ── Backend health ──────────────────────────────────────────────────────────
   const backendHealthy = useBackendHealth()
+  const { theme, toggle: toggleTheme } = useTheme()
 
   // ── Room clock loop ── (hold when anyone is buffering) ──────────────────────
   useRoomClock(playerRef, clock, bufferingCount > 0, lastActionRef)
@@ -280,6 +282,10 @@ export default function RoomPage() {
               ✕ Сбросить видео
             </button>
           )}
+          <button onClick={toggleTheme} title="Сменить тему"
+            className="px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors">
+            {theme === 'sunset' ? '🌙' : '☀️'}
+          </button>
           <button onClick={copyLink}
             className="px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors">
             {copied ? '✓ Скопировано' : 'Поделиться'}

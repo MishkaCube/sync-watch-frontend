@@ -19,6 +19,7 @@ export function useRoomClock(
 ) {
   const clockRef = useRef(clock)
   const holdRef  = useRef(holdPaused)
+  const appliedPausedPos = useRef<number | null>(null)  // last paused position we applied
   useEffect(() => { clockRef.current = clock }, [clock])
   useEffect(() => { holdRef.current = holdPaused }, [holdPaused])
 
@@ -57,11 +58,18 @@ export function useRoomClock(
 
       // ── 2. Correct drift (only while playing) ───────────────────────────
       if (!c.playing) {
-        // Paused — just make sure position matches
-        if (Math.abs(actual - c.position) > 0.5) p.seekTo(c.position)
         p.setPlaybackRate(1.0)
+        // Apply a paused position ONLY when it actually changed (a real remote seek).
+        // Don't re-seek every tick — HLS snaps to keyframes, so actual rarely equals
+        // c.position exactly, and constant re-seeking blocks the user's own seeking.
+        if (appliedPausedPos.current !== c.position) {
+          appliedPausedPos.current = c.position
+          if (Math.abs(actual - c.position) > 0.5) p.seekTo(c.position)
+        }
         return
       }
+      // playing → forget the applied paused position so the next pause re-applies
+      appliedPausedPos.current = null
 
       const drift = actual - expected   // positive = we're ahead; negative = behind
 

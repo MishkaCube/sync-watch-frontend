@@ -2,6 +2,61 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─────────────────────────────────────────────────────────────
+   Brand themes. Values are space-separated RGB channels so Tailwind
+   opacity modifiers (bg-gray-900/50) keep working.
+   ───────────────────────────────────────────────────────────── */
+
+/* ☀️ Sunset Together — warm, intimate (default) */
+:root,
+[data-theme='sunset'] {
+  --g-950: 21 16 26;     /* #15101A page bg            */
+  --g-900: 30 22 34;     /* #1E1622 surface            */
+  --g-800: 42 31 48;     /* #2A1F30 surface-2 / inputs */
+  --g-700: 58 44 64;     /* #3A2C40 hover / borders    */
+  --g-600: 90 74 96;     /* muted strong               */
+  --g-500: 138 122 144;
+  --g-400: 176 155 168;  /* secondary text             */
+  --g-300: 216 200 210;
+  --g-200: 236 224 232;
+  --g-100: 245 232 236;  /* #F5E8EC primary text       */
+
+  --v-300: 254 205 211;
+  --v-400: 251 113 133;  /* coral accent (text)        */
+  --v-500: 253 164 175;  /* lighter (hover)            */
+  --v-600: 251 113 133;  /* #FB7185 coral (buttons)    */
+  --v-700: 244 63 94;    /* deeper                     */
+
+  --a-300: 253 230 138;
+  --a-400: 251 191 36;   /* #FBBF24 amber              */
+  --a-500: 245 158 11;
+}
+
+/* 🌙 Midnight — pleasant neutral dark */
+[data-theme='midnight'] {
+  --g-950: 11 12 16;     /* #0B0C10 */
+  --g-900: 20 22 28;     /* #14161C */
+  --g-800: 31 34 43;     /* #1F222B */
+  --g-700: 44 49 60;     /* #2C313C */
+  --g-600: 75 85 99;
+  --g-500: 107 114 128;
+  --g-400: 156 163 175;
+  --g-300: 203 208 216;
+  --g-200: 229 231 235;
+  --g-100: 243 244 246;
+
+  /* keep the coral brand accent across themes for consistency */
+  --v-300: 254 205 211;
+  --v-400: 251 113 133;
+  --v-500: 253 164 175;
+  --v-600: 251 113 133;
+  --v-700: 244 63 94;
+
+  --a-300: 253 230 138;
+  --a-400: 251 191 36;
+  --a-500: 245 158 11;
+}
+
 body {
   @apply bg-gray-950 text-gray-100 min-h-screen;
 }
