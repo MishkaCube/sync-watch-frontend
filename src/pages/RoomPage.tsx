@@ -8,12 +8,14 @@ import VideoPlayer from '../components/VideoPlayer'
 import WaitingOverlay from '../components/WaitingOverlay'
 import PartnerBufferingOverlay from '../components/PartnerBufferingOverlay'
 import BackendDownOverlay from '../components/BackendDownOverlay'
+import JoiningOverlay from '../components/JoiningOverlay'
 import ChatPanel from '../components/ChatPanel'
 import Avatar from '../components/Avatar'
 import { useSync } from '../hooks/useSync'
 import { useRoomClock } from '../hooks/useRoomClock'
 import { useBackendHealth } from '../hooks/useBackendHealth'
 import { hlsWarmup, getConfig } from '../lib/api'
+import { toProxiedUrl } from '../lib/hls'
 import type { PlayerHandle } from '../components/YouTubePlayer'
 import type { ChatMessage, ClockEvent, PlayerEvent, SourceType } from '../lib/types'
 
@@ -36,6 +38,13 @@ export default function RoomPage() {
   const [bufferingCount, setBufferingCount] = useState(0)
   const [rezkaEnabled, setRezkaEnabled] = useState(true)
   const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [joining, setJoining] = useState(true)   // "connecting to session" overlay
+
+  // safety: never trap the user behind the joining overlay
+  useEffect(() => {
+    const t = setTimeout(() => setJoining(false), 20000)
+    return () => clearTimeout(t)
+  }, [])
 
   // Load feature flags
   useEffect(() => {
@@ -92,6 +101,11 @@ export default function RoomPage() {
       }
     }, []),
     onBuffering: useCallback((count: number) => setBufferingCount(count), []),
+    onInitialState: useCallback((hasSource: boolean) => {
+      // No video in the room yet → nothing to buffer, session is ready.
+      // If there is a source, we keep the overlay until the player reports ready.
+      if (!hasSource) setJoining(false)
+    }, []),
     onParticipants: useCallback((count: number, previousCount: number) => {
       setParticipants(count)
       const someoneLeft = count < previousCount
@@ -154,9 +168,11 @@ export default function RoomPage() {
   }
 
   function handleSource(type: SourceType, value: string) {
-    const s = { type, value }
+    // route HLS through the caching proxy (covers both manual URLs and HDRezka)
+    const finalValue = type === 'url' ? toProxiedUrl(value) : value
+    const s = { type, value: finalValue }
     setSource(s); sourceRef.current = s
-    sendEvent({ type: 'source-change', currentTime: 0, sourceType: type, sourceValue: value })
+    sendEvent({ type: 'source-change', currentTime: 0, sourceType: type, sourceValue: finalValue })
   }
 
   function handleResetSource() {
@@ -177,6 +193,7 @@ export default function RoomPage() {
   return (
     <div className="min-h-screen flex flex-col">
       {!backendHealthy && <BackendDownOverlay />}
+      {joining && backendHealthy && <JoiningOverlay />}
 
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-3 bg-gray-900 border-b border-gray-800">
@@ -232,6 +249,7 @@ export default function RoomPage() {
                   onUserPlay={handleUserPlay}
                   onUserPause={handleUserPause}
                   onUserSeek={handleUserSeek}
+                  onReady={() => setJoining(false)}
                 />
               ) : (
                 <VideoPlayer
@@ -241,6 +259,7 @@ export default function RoomPage() {
                   onUserPause={handleUserPause}
                   onUserSeek={handleUserSeek}
                   onBufferingChange={handleBufferingChange}
+                  onReady={() => setJoining(false)}
                 />
               )
             ) : (

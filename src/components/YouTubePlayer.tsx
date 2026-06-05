@@ -15,11 +15,12 @@ interface Props {
   onUserPlay:  (time: number) => void
   onUserPause: (time: number) => void
   onUserSeek:  (time: number) => void
+  onReady?:    () => void
 }
 
 const SUPPRESS_MS = 500
 
-const YouTubePlayer = forwardRef<PlayerHandle, Props>(({ videoId, onUserPlay, onUserPause, onUserSeek }, ref) => {
+const YouTubePlayer = forwardRef<PlayerHandle, Props>(({ videoId, onUserPlay, onUserPause, onUserSeek, onReady }, ref) => {
   const containerRef   = useRef<HTMLDivElement>(null)
   const playerRef      = useRef<any>(null)
   const suppressUntil  = useRef(0)
@@ -27,9 +28,11 @@ const YouTubePlayer = forwardRef<PlayerHandle, Props>(({ videoId, onUserPlay, on
   const onUserPauseRef = useRef(onUserPause)
   const onUserSeekRef  = useRef(onUserSeek)
 
+  const onReadyRef     = useRef(onReady)
   useEffect(() => { onUserPlayRef.current  = onUserPlay  }, [onUserPlay])
   useEffect(() => { onUserPauseRef.current = onUserPause }, [onUserPause])
   useEffect(() => { onUserSeekRef.current  = onUserSeek  }, [onUserSeek])
+  useEffect(() => { onReadyRef.current     = onReady     }, [onReady])
 
   const suppress     = () => { suppressUntil.current = Date.now() + SUPPRESS_MS }
   const isSuppressed = () => Date.now() < suppressUntil.current
@@ -53,6 +56,7 @@ const YouTubePlayer = forwardRef<PlayerHandle, Props>(({ videoId, onUserPlay, on
         videoId: extractYouTubeId(videoId) ?? videoId,
         playerVars: { controls: 1, rel: 0 },
         events: {
+          onReady: () => onReadyRef.current?.(),
           onStateChange: (e: any) => {
             if (isSuppressed()) return
             const YT = (window as any).YT.PlayerState

@@ -8,20 +8,24 @@ interface Props {
   onUserPause: (time: number) => void
   onUserSeek:  (time: number) => void
   onBufferingChange?: (isBuffering: boolean) => void
+  onReady?: () => void   // fired once the media is ready to play
 }
 
 const SUPPRESS_MS       = 500
-const BUFFER_DEBOUNCE   = 700   // only report buffering if stall persists this long
+// Only coordinate a room-wide pause if a stall really persists — short hiccups
+// (segment boundaries, brief network jitter) shouldn't freeze both clients.
+const BUFFER_DEBOUNCE   = 2500
 
 function isHls(src: string) {
   return src.includes('.m3u8') || src.includes('/api/hls/manifest')
 }
 
-const VideoPlayer = forwardRef<PlayerHandle, Props>(({ src, onUserPlay, onUserPause, onUserSeek, onBufferingChange }, ref) => {
+const VideoPlayer = forwardRef<PlayerHandle, Props>(({ src, onUserPlay, onUserPause, onUserSeek, onBufferingChange, onReady }, ref) => {
   const videoRef        = useRef<HTMLVideoElement>(null)
   const suppressUntil   = useRef(0)
   const bufferDebounce  = useRef<ReturnType<typeof setTimeout> | null>(null)
   const bufferReported  = useRef(false)
+  const readyFired      = useRef(false)
   const hlsRef          = useRef<Hls | null>(null)
   const [buffering, setBuffering] = useState(false)
   const [error, setError]         = useState<string | null>(null)
@@ -50,6 +54,13 @@ const VideoPlayer = forwardRef<PlayerHandle, Props>(({ src, onUserPlay, onUserPa
     if (bufferReported.current) {
       bufferReported.current = false
       onBufferingChange?.(false)
+    }
+  }
+
+  const fireReady = () => {
+    if (!readyFired.current) {
+      readyFired.current = true
+      onReady?.()
     }
   }
 
@@ -83,6 +94,7 @@ const VideoPlayer = forwardRef<PlayerHandle, Props>(({ src, onUserPlay, onUserPa
     const video = videoRef.current
     if (!video) return
     setError(null); setRetrying(false); setBuffering(false)
+    readyFired.current = false   // new source — wait for it to become playable
 
     if (!isHls(src)) { video.src = src; return }
     if (video.canPlayType('application/vnd.apple.mpegurl')) { video.src = src; return }
@@ -91,9 +103,10 @@ const VideoPlayer = forwardRef<PlayerHandle, Props>(({ src, onUserPlay, onUserPa
 
     setBuffering(true)
     const hls = new Hls({
-      maxBufferLength: 60, maxMaxBufferLength: 120,
+      // hold a generous buffer so playback survives slow segments
+      maxBufferLength: 120, maxMaxBufferLength: 300, backBufferLength: 30,
       lowLatencyMode: false, enableWorker: true,
-      fragLoadingMaxRetry: 2, fragLoadingRetryDelay: 1000,
+      fragLoadingMaxRetry: 4, fragLoadingRetryDelay: 800,
     })
     hlsRef.current = hls
     hls.loadSource(src)
@@ -146,7 +159,8 @@ const VideoPlayer = forwardRef<PlayerHandle, Props>(({ src, onUserPlay, onUserPa
         }}
         onWaiting={onStall}
         onStalled={onStall}
-        onPlaying={onResume}
+        onPlaying={() => { onResume(); fireReady() }}
+        onCanPlay={fireReady}
         onCanPlayThrough={onResume}
       />
 

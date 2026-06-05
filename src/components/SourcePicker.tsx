@@ -34,15 +34,8 @@ export default function SourcePicker({ roomId, currentSource, onSource }: Props)
   function handleUrlSubmit() {
     const trimmed = url.trim()
     if (!trimmed) return
-    if (isYouTubeUrl(trimmed)) {
-      onSource('youtube', trimmed)
-    } else if (trimmed.includes('.m3u8')) {
-      // route m3u8 through HLS caching proxy
-      const proxied = `/api/hls/manifest?url=${encodeURIComponent(trimmed)}`
-      onSource('url', proxied)
-    } else {
-      onSource('url', trimmed)
-    }
+    // HLS proxying is handled centrally in RoomPage.handleSource
+    onSource(isYouTubeUrl(trimmed) ? 'youtube' : 'url', trimmed)
   }
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {

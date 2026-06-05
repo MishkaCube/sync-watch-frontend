@@ -13,13 +13,14 @@ interface UseSyncOptions {
   onBuffering?: (count: number) => void
   onChat?: (msg: ChatMessage) => void
   onChatHistory?: (msgs: ChatMessage[]) => void
+  onInitialState?: (hasSource: boolean) => void  // first connect: state fetched
   onDisconnect?: () => void
   onReconnect?: () => void
 }
 
 export function useSync({
   roomId, senderId,
-  onClock, onSourceChange, onParticipants, onBuffering, onChat, onChatHistory,
+  onClock, onSourceChange, onParticipants, onBuffering, onChat, onChatHistory, onInitialState,
   onDisconnect, onReconnect,
 }: UseSyncOptions) {
   const clientRef       = useRef<Client | null>(null)
@@ -29,6 +30,7 @@ export function useSync({
   const onBufferingRef  = useRef(onBuffering)
   const onChatRef       = useRef(onChat)
   const onChatHistoryRef = useRef(onChatHistory)
+  const onInitialStateRef = useRef(onInitialState)
   const onDisconnectRef = useRef(onDisconnect)
   const onReconnectRef  = useRef(onReconnect)
 
@@ -38,6 +40,7 @@ export function useSync({
   useEffect(() => { onBufferingRef.current    = onBuffering    }, [onBuffering])
   useEffect(() => { onChatRef.current         = onChat         }, [onChat])
   useEffect(() => { onChatHistoryRef.current  = onChatHistory  }, [onChatHistory])
+  useEffect(() => { onInitialStateRef.current = onInitialState }, [onInitialState])
   useEffect(() => { onDisconnectRef.current   = onDisconnect   }, [onDisconnect])
   useEffect(() => { onReconnectRef.current    = onReconnect    }, [onReconnect])
 
@@ -85,9 +88,13 @@ export function useSync({
         // failure (e.g. room 404 after a server restart) doesn't block the rest.
 
         // 1) source
+        let hasSource = false
         try {
           const room = await getRoom(roomId)
-          if (room.lastSource) onSourceRef.current(room.lastSource)
+          if (room.lastSource) {
+            onSourceRef.current(room.lastSource)
+            hasSource = !!room.lastSource.sourceValue
+          }
         } catch { /* room may be 404 — ignore */ }
 
         // 2) clock
@@ -107,6 +114,7 @@ export function useSync({
           }
         } catch { /* ignore */ }
 
+        if (isFirst) onInitialStateRef.current?.(hasSource)
         if (!isFirst) onReconnectRef.current?.()
         isFirst = false
       })(),
