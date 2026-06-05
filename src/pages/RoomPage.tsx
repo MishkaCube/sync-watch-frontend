@@ -13,7 +13,7 @@ import Avatar from '../components/Avatar'
 import { useSync } from '../hooks/useSync'
 import { useRoomClock } from '../hooks/useRoomClock'
 import { useBackendHealth } from '../hooks/useBackendHealth'
-import { hlsWarmup, getConfig } from '../lib/api'
+import { hlsWarmup, getConfig, whoami } from '../lib/api'
 import type { PlayerHandle } from '../components/YouTubePlayer'
 import type { ChatMessage, ClockEvent, PlayerEvent, SourceType } from '../lib/types'
 
@@ -36,6 +36,12 @@ export default function RoomPage() {
   const [bufferingCount, setBufferingCount] = useState(0)
   const [rezkaEnabled, setRezkaEnabled] = useState(true)
   const [messages, setMessages] = useState<ChatMessage[]>([])
+  // server-side IP-derived identity (for chat ownership + avatar); falls back to local id
+  const [chatId, setChatId] = useState<string>(senderId)
+
+  useEffect(() => {
+    whoami().then((id) => { if (id) setChatId(id) })
+  }, [])
 
   // Load feature flags
   useEffect(() => {
@@ -192,8 +198,8 @@ export default function RoomPage() {
             {Array.from({ length: Math.min(participants, 4) }).map((_, i) => (
               <Avatar
                 key={i}
-                // first slot = me (real seed), others stable per room slot
-                seed={i === 0 ? senderId : `${roomId}-${i}`}
+                // first slot = me (IP-derived seed), others stable per room slot
+                seed={i === 0 ? chatId : `${roomId}-${i}`}
                 size={24}
                 className="ring-2 ring-gray-900"
               />
@@ -273,7 +279,7 @@ export default function RoomPage() {
           </div>
 
           {/* Chat */}
-          <ChatPanel messages={messages} myId={senderId} onSend={sendChat} />
+          <ChatPanel messages={messages} myId={chatId} onSend={sendChat} />
         </div>
       </div>
     </div>
