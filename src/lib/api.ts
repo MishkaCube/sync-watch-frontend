@@ -18,6 +18,17 @@ export interface AppConfig {
   rezkaEnabled: boolean
 }
 
+export async function whoami(): Promise<string | null> {
+  try {
+    const res = await fetch(`${BASE}/whoami`)
+    if (!res.ok) return null
+    const data = await res.json()
+    return data.id ?? null
+  } catch {
+    return null
+  }
+}
+
 export async function getConfig(): Promise<AppConfig> {
   try {
     const res = await fetch(`${BASE}/config`)
