@@ -14,6 +14,8 @@ interface UseSyncOptions {
   onChat?: (msg: ChatMessage) => void
   onChatHistory?: (msgs: ChatMessage[]) => void
   onInitialState?: (hasSource: boolean) => void  // first connect: state fetched
+  onPrepare?: (position: number) => void   // barrier: seek + buffer, then send ready
+  onGo?: (position: number) => void        // barrier: start playing now
   onDisconnect?: () => void
   onReconnect?: () => void
 }
@@ -21,6 +23,7 @@ interface UseSyncOptions {
 export function useSync({
   roomId, senderId,
   onClock, onSourceChange, onParticipants, onBuffering, onChat, onChatHistory, onInitialState,
+  onPrepare, onGo,
   onDisconnect, onReconnect,
 }: UseSyncOptions) {
   const clientRef       = useRef<Client | null>(null)
@@ -31,6 +34,8 @@ export function useSync({
   const onChatRef       = useRef(onChat)
   const onChatHistoryRef = useRef(onChatHistory)
   const onInitialStateRef = useRef(onInitialState)
+  const onPrepareRef    = useRef(onPrepare)
+  const onGoRef         = useRef(onGo)
   const onDisconnectRef = useRef(onDisconnect)
   const onReconnectRef  = useRef(onReconnect)
 
@@ -41,6 +46,8 @@ export function useSync({
   useEffect(() => { onChatRef.current         = onChat         }, [onChat])
   useEffect(() => { onChatHistoryRef.current  = onChatHistory  }, [onChatHistory])
   useEffect(() => { onInitialStateRef.current = onInitialState }, [onInitialState])
+  useEffect(() => { onPrepareRef.current      = onPrepare      }, [onPrepare])
+  useEffect(() => { onGoRef.current           = onGo           }, [onGo])
   useEffect(() => { onDisconnectRef.current   = onDisconnect   }, [onDisconnect])
   useEffect(() => { onReconnectRef.current    = onReconnect    }, [onReconnect])
 
@@ -67,6 +74,14 @@ export function useSync({
           }
           if (data.type === 'buffering') {
             onBufferingRef.current?.(data.count)
+            return
+          }
+          if (data.type === 'prepare') {
+            onPrepareRef.current?.(data.position)
+            return
+          }
+          if (data.type === 'go') {
+            onGoRef.current?.(data.position)
             return
           }
           if (data.type === 'chat') {
