@@ -20,6 +20,7 @@ export function useRoomClock(
   const clockRef = useRef(clock)
   const holdRef  = useRef(holdPaused)
   const appliedPausedPos = useRef<number | null>(null)  // last paused position we applied
+  const lastActual = useRef(0)                          // currentTime on previous tick
   useEffect(() => { clockRef.current = clock }, [clock])
   useEffect(() => { holdRef.current = holdPaused }, [holdPaused])
 
@@ -59,17 +60,33 @@ export function useRoomClock(
       // ── 2. Correct drift (only while playing) ───────────────────────────
       if (!c.playing) {
         p.setPlaybackRate(1.0)
-        // Apply a paused position ONLY when it actually changed (a real remote seek).
-        // Don't re-seek every tick — HLS snaps to keyframes, so actual rarely equals
-        // c.position exactly, and constant re-seeking blocks the user's own seeking.
-        if (appliedPausedPos.current !== c.position) {
+        const gap = Math.abs(actual - c.position)
+        // New target (remote seek / first apply after reload) → seek once.
+        if (c.position !== appliedPausedPos.current) {
           appliedPausedPos.current = c.position
-          if (Math.abs(actual - c.position) > 0.5) p.seekTo(c.position)
+          if (gap > 0.5) p.seekTo(c.position)
+        } else if (gap > 5) {
+          // Same target but still way off — e.g. Safari ignored the seek right after
+          // reload (native HLS not ready yet). Keep retrying until it lands.
+          p.seekTo(c.position)
         }
         return
       }
       // playing → forget the applied paused position so the next pause re-applies
       appliedPausedPos.current = null
+
+      // Detect whether the video is ACTUALLY progressing. On iOS the element can
+      // report playing (paused=false) yet not advance (autoplay/inline blocked).
+      // In that state, chasing `expected` with hard seeks just frame-steps the
+      // video (a slideshow). So if it isn't progressing, nudge play() and skip
+      // the seek correction instead of stepping frames.
+      const progressed = actual - lastActual.current
+      lastActual.current = actual
+      if (progressed < 0.1) {
+        p.play()                 // try to (re)start real playback
+        p.setPlaybackRate(1.0)
+        return
+      }
 
       const drift = actual - expected   // positive = we're ahead; negative = behind
 

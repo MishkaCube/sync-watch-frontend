@@ -20,6 +20,7 @@ import { hlsWarmup, getConfig, getRoom } from '../lib/api'
 import { toProxiedUrl } from '../lib/hls'
 import type { PlayerHandle } from '../components/YouTubePlayer'
 import type { ChatMessage, ClockEvent, PlayerEvent, SourceType } from '../lib/types'
+import { getExpectedPosition } from '../lib/types'
 
 const senderId = uuidv4()
 
@@ -193,11 +194,18 @@ export default function RoomPage() {
 
   // ── User actions → send to server (server updates clock) ──────────────────
   function handleUserPlay(t: number) {
+    // If our local video is far behind the room (e.g. Safari after reload, where the
+    // native HLS seek hasn't landed and currentTime is still ~0), resume from the
+    // room's position instead of dragging everyone back to 0.
+    let pos = t
+    if (clock) {
+      const expected = getExpectedPosition(clock)
+      if (expected - t > 5) pos = expected
+    }
     const src = sourceRef.current
-    if (src?.value.includes('/api/hls/manifest')) hlsWarmup(src.value, t)
-    // don't start locally — the server barrier will drive a synchronized start (prepare → go)
-    optimisticClock(t, false)
-    sendEvent({ type: 'play', currentTime: t })
+    if (src?.value.includes('/api/hls/manifest')) hlsWarmup(src.value, pos)
+    optimisticClock(pos, false)
+    sendEvent({ type: 'play', currentTime: pos })
   }
   function handleUserPause(t: number) {
     optimisticClock(t, false)
