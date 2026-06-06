@@ -273,7 +273,7 @@ export default function RoomPage() {
               <Avatar
                 key={i}
                 seed={i === 0 ? senderId : `${roomId}-${i}`}
-                size={24}
+                size={32}
                 className="ring-2 ring-gray-900"
               />
             ))}

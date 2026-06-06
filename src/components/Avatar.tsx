@@ -6,7 +6,7 @@ interface Props {
 
 // Fun, deterministic avatars from DiceBear (no key, nothing stored server-side).
 // Same seed → same face, so each user keeps a stable avatar by their senderId.
-const STYLE = 'fun-emoji'
+const STYLE = 'big-smile'
 
 export default function Avatar({ seed, size = 28, className = '' }: Props) {
   const url = `https://api.dicebear.com/9.x/${STYLE}/svg?seed=${encodeURIComponent(seed)}`
