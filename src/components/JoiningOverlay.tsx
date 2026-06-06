@@ -11,7 +11,7 @@ export default function JoiningOverlay() {
       </div>
 
       <div className="text-center flex flex-col gap-2">
-        <h2 className="text-xl font-bold text-white">Подключаемся к сеансу...</h2>
+        <h2 className="text-xl font-bold text-gray-100">Подключаемся к сеансу...</h2>
         <p className="text-gray-400 text-sm">
           Синхронизируем время и готовим видео — почти готово
         </p>

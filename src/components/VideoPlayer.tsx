@@ -189,7 +189,7 @@ const VideoPlayer = forwardRef<PlayerHandle, Props>(({ src, onUserPlay, onUserPa
           className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-4
                      bg-gray-950/80 backdrop-blur-sm rounded-xl cursor-pointer">
           <span className="w-20 h-20 flex items-center justify-center rounded-full
-                           bg-violet-600 hover:bg-violet-500 transition-colors text-3xl">▶</span>
+                           bg-violet-600 hover:bg-violet-500 text-white transition-colors text-3xl">▶</span>
           <span className="text-gray-200 font-medium">Нажмите, чтобы начать синхронный просмотр</span>
           <span className="text-gray-500 text-sm">Chrome требует клик для запуска со звуком</span>
         </button>
@@ -211,7 +211,7 @@ const VideoPlayer = forwardRef<PlayerHandle, Props>(({ src, onUserPlay, onUserPa
           <span className="text-gray-200 flex-1">{error}</span>
           {!retrying && (
             <button onClick={handleRetry}
-              className="ml-2 px-3 py-1 bg-violet-600 hover:bg-violet-500 rounded-lg text-xs font-medium flex-shrink-0">
+              className="ml-2 px-3 py-1 bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs font-medium flex-shrink-0">
               Повторить
             </button>
           )}

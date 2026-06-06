@@ -17,7 +17,7 @@ export default function WaitingOverlay() {
 
       {/* Dots loader */}
       <div className="flex flex-col items-center gap-3">
-        <p className="text-white text-lg font-semibold">Ждём партнёра...</p>
+        <p className="text-gray-100 text-lg font-semibold">Ждём партнёра...</p>
         <div className="flex gap-2">
           {[0, 1, 2].map((i) => (
             <span

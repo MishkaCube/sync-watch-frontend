@@ -5,6 +5,10 @@ import './index.css'
 import HomePage from './pages/HomePage'
 import RoomPage from './pages/RoomPage'
 
+// Apply the saved theme globally before first paint (default: dark)
+const savedTheme = localStorage.getItem('syncwatch-theme') === 'light' ? 'light' : 'dark'
+document.documentElement.setAttribute('data-theme', savedTheme)
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>

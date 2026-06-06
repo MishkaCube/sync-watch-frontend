@@ -255,7 +255,7 @@ export default function RoomPage() {
       <div className="safe-top safe-x flex flex-wrap items-center justify-between gap-x-3 gap-y-2.5
                       px-4 sm:px-6  bg-gray-900 border-b border-gray-800">
         <button onClick={handleHomeButton} className="flex items-center gap-2 font-semibold text-gray-200 shrink-0 pr-2 py-4 px-4">
-          <img src="/logo.svg" alt="SyncWatch" className="w-8 h-8 sm:w-7 sm:h-7" />
+          <img src="/logo.svg" alt="SyncWatch" className="w-10 h-10 sm:w-9 sm:h-9" />
           <span className="hidden sm:inline">SyncWatch</span>
         </button>
 
@@ -295,7 +295,7 @@ export default function RoomPage() {
           )}
           <button onClick={toggleTheme} title="Сменить тему"
             className="px-3 py-2 sm:py-1 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors">
-            {theme === 'sunset' ? '🌙' : '☀️'}
+            {theme === 'dark' ? '☀️' : '🌙'}
           </button>
           <button onClick={copyLink} title="Поделиться"
             className="px-3 py-2  sm:py-1 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors">

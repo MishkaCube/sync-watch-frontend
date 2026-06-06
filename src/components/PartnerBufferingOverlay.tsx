@@ -13,7 +13,7 @@ export default function PartnerBufferingOverlay() {
       </div>
 
       <div className="flex flex-col items-center gap-2 text-center px-6">
-        <p className="text-white font-semibold">Ждём партнёра...</p>
+        <p className="text-gray-100 font-semibold">Ждём партнёра...</p>
         <p className="text-gray-400 text-sm">Видео возобновится автоматически,<br/>когда буфер загрузится у обоих</p>
       </div>
 

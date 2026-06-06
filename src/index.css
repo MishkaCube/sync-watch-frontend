@@ -3,62 +3,65 @@
 @tailwind utilities;
 
 /* ─────────────────────────────────────────────────────────────
-   Brand themes. Values are space-separated RGB channels so Tailwind
-   opacity modifiers (bg-gray-900/50) keep working.
+   Brand: night-blue base, soft-pink accent, muted-violet secondary.
+   Two real themes — Dark (default) and Light. The gray scale is
+   semantic: g-950 = page bg, g-900 = surface, … g-100 = primary text.
+   In Light theme it inverts (g-950 light, g-100 dark) so existing
+   classes (bg-gray-950, text-gray-100) just work.
+   Values are space-separated RGB channels for alpha modifiers.
    ───────────────────────────────────────────────────────────── */
 
-/* ☀️ Sunset Together — warm, intimate (default) */
+/* 🌙 Dark (default) */
 :root,
-[data-theme='sunset'] {
-  --g-950: 21 16 26;     /* #15101A page bg            */
-  --g-900: 30 22 34;     /* #1E1622 surface            */
-  --g-800: 42 31 48;     /* #2A1F30 surface-2 / inputs */
-  --g-700: 58 44 64;     /* #3A2C40 hover / borders    */
-  --g-600: 90 74 96;     /* muted strong               */
-  --g-500: 138 122 144;
-  --g-400: 176 155 168;  /* secondary text             */
-  --g-300: 216 200 210;
-  --g-200: 236 224 232;
-  --g-100: 245 232 236;  /* #F5E8EC primary text       */
+[data-theme='dark'] {
+  --g-950: 15 16 32;     /* #0F1020 page bg            */
+  --g-900: 26 28 46;     /* #1A1C2E surface            */
+  --g-800: 37 40 64;     /* #252840 surface-2 / inputs */
+  --g-700: 51 54 86;     /* #333656 hover / borders    */
+  --g-600: 74 78 110;
+  --g-500: 110 114 144;
+  --g-400: 200 203 211;  /* #C8CBD3 secondary text     */
+  --g-300: 221 223 230;
+  --g-200: 236 237 241;
+  --g-100: 245 245 247;  /* #F5F5F7 primary text       */
 
-  --v-300: 254 205 211;
-  --v-400: 251 113 133;  /* coral accent (text)        */
-  --v-500: 253 164 175;  /* lighter (hover)            */
-  --v-600: 251 113 133;  /* #FB7185 coral (buttons)    */
-  --v-700: 244 63 94;    /* deeper                     */
+  --v-300: 255 169 194;
+  --v-400: 255 92 138;   /* #FF5C8A accent (text)      */
+  --v-500: 255 124 161;  /* hover (lighter)            */
+  --v-600: 255 92 138;   /* #FF5C8A accent (buttons)   */
+  --v-700: 233 75 121;   /* deeper                     */
 
-  --a-300: 253 230 138;
-  --a-400: 251 191 36;   /* #FBBF24 amber              */
-  --a-500: 245 158 11;
+  --a-300: 167 156 255;
+  --a-400: 124 107 255;  /* #7C6BFF secondary violet   */
+  --a-500: 99 84 230;
 }
 
-/* 🌙 Midnight — pleasant neutral dark */
-[data-theme='midnight'] {
-  --g-950: 11 12 16;     /* #0B0C10 */
-  --g-900: 20 22 28;     /* #14161C */
-  --g-800: 31 34 43;     /* #1F222B */
-  --g-700: 44 49 60;     /* #2C313C */
-  --g-600: 75 85 99;
-  --g-500: 107 114 128;
-  --g-400: 156 163 175;
-  --g-300: 203 208 216;
-  --g-200: 229 231 235;
-  --g-100: 243 244 246;
+/* ☀️ Light */
+[data-theme='light'] {
+  --g-950: 245 245 247;  /* #F5F5F7 page bg            */
+  --g-900: 255 255 255;  /* #FFFFFF surface            */
+  --g-800: 236 237 241;  /* #ECEDF1 surface-2 / inputs */
+  --g-700: 216 218 226;  /* #D8DAE2 hover / borders    */
+  --g-600: 156 160 172;
+  --g-500: 122 126 140;
+  --g-400: 90 94 112;    /* secondary text (readable)  */
+  --g-300: 58 61 77;
+  --g-200: 38 40 58;
+  --g-100: 26 28 46;     /* #1A1C2E primary text       */
 
-  /* keep the coral brand accent across themes for consistency */
-  --v-300: 254 205 211;
-  --v-400: 251 113 133;
-  --v-500: 253 164 175;
-  --v-600: 251 113 133;
-  --v-700: 244 63 94;
+  --v-300: 255 124 161;
+  --v-400: 214 62 110;   /* deeper pink for text on light */
+  --v-500: 255 92 138;
+  --v-600: 233 75 121;   /* accent buttons (white text)   */
+  --v-700: 199 52 99;
 
-  --a-300: 253 230 138;
-  --a-400: 251 191 36;
-  --a-500: 245 158 11;
+  --a-300: 124 107 255;
+  --a-400: 108 92 230;
+  --a-500: 90 76 200;
 }
 
 html, body {
-  -webkit-text-size-adjust: 100%;   /* iOS: don't auto-zoom text */
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -73,8 +76,7 @@ body {
   padding-right: env(safe-area-inset-right);
 }
 
-/* iOS Safari zooms in when focusing an input with font-size < 16px.
-   Force 16px on small screens to prevent the jump. */
+/* iOS Safari zoom-on-focus fix */
 @media (max-width: 640px) {
   input, textarea, select { font-size: 16px !important; }
 }

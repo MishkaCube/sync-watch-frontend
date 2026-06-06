@@ -76,7 +76,7 @@ export default function ChatPanel({ messages, myId, onSend }: Props) {
         />
         <button
           onClick={submit}
-          className="px-3 py-1.5 bg-violet-600 hover:bg-violet-500 rounded-lg text-sm font-medium transition-colors"
+          className="px-3 py-1.5 bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-sm font-medium transition-colors"
         >
           ➤
         </button>

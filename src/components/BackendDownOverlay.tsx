@@ -17,7 +17,7 @@ export default function BackendDownOverlay() {
       </div>
 
       <div className="text-center max-w-md flex flex-col gap-3">
-        <h2 className="text-2xl font-bold text-white">Сервер прилёг отдохнуть</h2>
+        <h2 className="text-2xl font-bold text-gray-100">Сервер прилёг отдохнуть</h2>
         <p className="text-gray-400">
           Бэкенд сейчас недоступен — наверное, пьёт кофе. ☕<br/>
           Мы сами переподключимся, как только он вернётся.

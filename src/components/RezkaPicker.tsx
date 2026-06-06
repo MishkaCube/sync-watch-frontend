@@ -104,7 +104,7 @@ export default function RezkaPicker({ onSource }: Props) {
         <button
           onClick={handleSearch}
           disabled={loading}
-          className="px-3 py-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 rounded-lg text-sm font-medium transition-colors"
+          className="px-3 py-2 bg-violet-600 hover:bg-violet-500 text-white disabled:opacity-50 rounded-lg text-sm font-medium transition-colors"
         >
           {loading ? '...' : '🔍'}
         </button>
@@ -222,7 +222,7 @@ export default function RezkaPicker({ onSource }: Props) {
           <button
             onClick={handlePlay}
             disabled={streamLoading}
-            className="w-full py-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 rounded-lg text-sm font-semibold transition-colors"
+            className="w-full py-2 bg-violet-600 hover:bg-violet-500 text-white disabled:opacity-50 rounded-lg text-sm font-semibold transition-colors"
           >
             {streamLoading ? 'Получаем ссылку...' : '▶ Смотреть'}
           </button>
