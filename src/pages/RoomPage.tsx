@@ -37,7 +37,7 @@ export default function RoomPage() {
   const [connected, setConnected] = useState(true)
   const [participants, setParticipants] = useState(0)
   const [waiting, setWaiting] = useState(false)
-  const [sidebarTab, setSidebarTab] = useState<'url' | 'rezka'>('rezka')
+  const [sidebarTab, setSidebarTab] = useState<'url' | 'rezka'>('url')
   const [clock, setClock] = useState<ClockEvent | null>(null)
   const [bufferingCount, setBufferingCount] = useState(0)
   const [rezkaEnabled, setRezkaEnabled] = useState(true)
@@ -258,7 +258,7 @@ export default function RoomPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen lg:h-screen flex flex-col lg:overflow-hidden bg-gray-950">
       {!backendHealthy && <BackendDownOverlay />}
       {joining && backendHealthy && roomStatus === 'ok' && <JoiningOverlay />}
 
@@ -317,9 +317,10 @@ export default function RoomPage() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex flex-col lg:flex-row gap-4 p-3 sm:p-4 safe-x safe-bottom">
+      <div className="flex-1 min-h-0 w-full max-w-[1600px] mx-auto flex flex-col lg:flex-row
+                      gap-4 p-3 sm:p-4 safe-x safe-bottom">
         {/* Player */}
-        <div className="flex-1 flex flex-col gap-4">
+        <div className="flex-1 min-w-0 flex flex-col justify-center">
           <div className="relative">
             {waiting && <WaitingOverlay />}
             {/* show overlay when a partner is buffering (count exceeds our own contribution) */}
@@ -346,31 +347,33 @@ export default function RoomPage() {
                 />
               )
             ) : (
-              <div className="flex items-center justify-center bg-gray-900 rounded-xl aspect-video text-gray-600">
-                Выберите видео для просмотра
+              <div className="flex flex-col items-center justify-center gap-3 bg-gray-900 border border-gray-800
+                              rounded-2xl aspect-video text-gray-500">
+                <span className="text-4xl opacity-60">🎞️</span>
+                <span>Выберите видео в панели справа</span>
               </div>
             )}
           </div>
         </div>
 
         {/* Sidebar */}
-        <div className="lg:w-80 flex flex-col gap-3">
-          {/* Tab switcher — only shown when HDRezka feature is enabled */}
-          {rezkaEnabled && (
-            <div className="flex gap-1 p-1 bg-gray-900 rounded-xl">
-              <button onClick={() => setSidebarTab('rezka')}
-                className={`flex-1 py-1.5 rounded-lg text-sm font-medium transition-colors
-                  ${sidebarTab === 'rezka' ? 'bg-violet-600 text-white' : 'text-gray-400 hover:text-gray-200'}`}>
-                🎬 HDRezka
-              </button>
-              <button onClick={() => setSidebarTab('url')}
-                className={`flex-1 py-1.5 rounded-lg text-sm font-medium transition-colors
-                  ${sidebarTab === 'url' ? 'bg-violet-600 text-white' : 'text-gray-400 hover:text-gray-200'}`}>
-                🔗 URL / Файл
-              </button>
-            </div>
-          )}
-          <div className="p-4 bg-gray-900 rounded-xl">
+        <aside className="lg:w-[360px] flex flex-col gap-3 lg:min-h-0">
+          {/* Source picker card */}
+          <div className="bg-gray-900 rounded-2xl p-3 sm:p-4 flex flex-col gap-3 shrink-0">
+            {rezkaEnabled && (
+              <div className="flex gap-1 p-1 bg-gray-950/60 rounded-xl">
+                <button onClick={() => setSidebarTab('url')}
+                  className={`flex-1 py-1.5 rounded-lg text-sm font-medium transition-colors
+                    ${sidebarTab === 'url' ? 'bg-violet-600 text-white' : 'text-gray-400 hover:text-gray-200'}`}>
+                  🔗 URL / Файл
+                </button>
+                <button onClick={() => setSidebarTab('rezka')}
+                  className={`flex-1 py-1.5 rounded-lg text-sm font-medium transition-colors
+                    ${sidebarTab === 'rezka' ? 'bg-violet-600 text-white' : 'text-gray-400 hover:text-gray-200'}`}>
+                  🎬 HDRezka
+                </button>
+              </div>
+            )}
             {rezkaEnabled && sidebarTab === 'rezka'
               ? <RezkaPicker onSource={handleSource} />
               : <SourcePicker roomId={roomId!} currentSource={source?.value} onSource={handleSource} />}
@@ -379,9 +382,9 @@ export default function RoomPage() {
           {/* Lobby — who's here + connection quality */}
           <LobbyPanel users={lobby} myId={senderId} />
 
-          {/* Chat */}
+          {/* Chat — grows to fill remaining height on desktop */}
           <ChatPanel messages={messages} myId={senderId} onSend={sendChat} />
-        </div>
+        </aside>
       </div>
     </div>
   )

@@ -29,7 +29,7 @@ export default function ChatPanel({ messages, myId, onSend }: Props) {
   }
 
   return (
-    <div className="flex flex-col bg-gray-900 rounded-xl h-80">
+    <div className="flex flex-col bg-gray-900 rounded-2xl h-80 lg:h-auto lg:flex-1 lg:min-h-[16rem]">
       <div className="px-4 py-2 border-b border-gray-800 text-sm font-medium text-gray-300">
         💬 Чат
       </div>

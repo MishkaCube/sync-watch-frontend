@@ -85,9 +85,7 @@ export default function SourcePicker({ roomId, currentSource, onSource }: Props)
   }
 
   return (
-    <div className="flex flex-col gap-4 p-6 bg-gray-900 rounded-xl">
-      <h2 className="text-lg font-semibold text-gray-200">Выбрать видео</h2>
-
+    <div className="flex flex-col gap-4">
       <div className="flex gap-2">
         <input
           type="text"

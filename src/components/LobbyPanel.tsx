@@ -29,7 +29,7 @@ function SignalBars({ quality }: { quality: ConnQuality }) {
 
 export default function LobbyPanel({ users, myId }: Props) {
   return (
-    <div className="bg-gray-900 rounded-xl p-4 flex flex-col gap-3">
+    <div className="bg-gray-900 rounded-2xl p-4 flex flex-col gap-3 shrink-0">
       <div className="text-sm font-medium text-gray-300 flex items-center gap-2">
         👥 В лобби <span className="text-gray-500">· {users.length}</span>
       </div>
