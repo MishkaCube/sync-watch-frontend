@@ -1,7 +1,7 @@
 import { Client } from '@stomp/stompjs'
 import SockJS from 'sockjs-client'
 import { useCallback, useEffect, useRef } from 'react'
-import type { ChatMessage, ClockEvent, ParticipantEvent, PlayerEvent } from '../lib/types'
+import type { ChatMessage, ClockEvent, ConnQuality, LobbyEvent, ParticipantEvent, PlayerEvent } from '../lib/types'
 import { getRoom } from '../lib/api'
 
 interface UseSyncOptions {
@@ -16,6 +16,7 @@ interface UseSyncOptions {
   onInitialState?: (hasSource: boolean) => void  // first connect: state fetched
   onPrepare?: (position: number) => void   // barrier: seek + buffer, then send ready
   onGo?: (position: number) => void        // barrier: start playing now
+  onLobby?: (users: LobbyEvent['users']) => void
   onDisconnect?: () => void
   onReconnect?: () => void
 }
@@ -23,7 +24,7 @@ interface UseSyncOptions {
 export function useSync({
   roomId, senderId,
   onClock, onSourceChange, onParticipants, onBuffering, onChat, onChatHistory, onInitialState,
-  onPrepare, onGo,
+  onPrepare, onGo, onLobby,
   onDisconnect, onReconnect,
 }: UseSyncOptions) {
   const clientRef       = useRef<Client | null>(null)
@@ -36,6 +37,7 @@ export function useSync({
   const onInitialStateRef = useRef(onInitialState)
   const onPrepareRef    = useRef(onPrepare)
   const onGoRef         = useRef(onGo)
+  const onLobbyRef      = useRef(onLobby)
   const onDisconnectRef = useRef(onDisconnect)
   const onReconnectRef  = useRef(onReconnect)
 
@@ -48,6 +50,7 @@ export function useSync({
   useEffect(() => { onInitialStateRef.current = onInitialState }, [onInitialState])
   useEffect(() => { onPrepareRef.current      = onPrepare      }, [onPrepare])
   useEffect(() => { onGoRef.current           = onGo           }, [onGo])
+  useEffect(() => { onLobbyRef.current        = onLobby        }, [onLobby])
   useEffect(() => { onDisconnectRef.current   = onDisconnect   }, [onDisconnect])
   useEffect(() => { onReconnectRef.current    = onReconnect    }, [onReconnect])
 
@@ -82,6 +85,10 @@ export function useSync({
           }
           if (data.type === 'go') {
             onGoRef.current?.(data.position)
+            return
+          }
+          if (data.type === 'lobby') {
+            onLobbyRef.current?.((data as LobbyEvent).users)
             return
           }
           if (data.type === 'chat') {
@@ -140,7 +147,35 @@ export function useSync({
 
     client.activate()
     clientRef.current = client
-    return () => client.deactivate()
+
+    // Presence heartbeat: measure RTT to the server, classify, and broadcast.
+    async function measureQuality(): Promise<ConnQuality> {
+      const t0 = performance.now()
+      try {
+        await fetch('/api/health', { cache: 'no-store' })
+      } catch {
+        return 'weak'
+      }
+      const rtt = performance.now() - t0
+      if (rtt < 150) return 'good'
+      if (rtt < 400) return 'normal'
+      return 'weak'
+    }
+    async function sendPresence() {
+      if (!client.connected) return
+      const quality = await measureQuality()
+      client.publish({
+        destination: `/app/room/${roomId}/event`,
+        body: JSON.stringify({ type: 'presence', quality, senderId, currentTime: 0 }),
+      })
+    }
+    sendPresence()
+    const presenceTimer = setInterval(sendPresence, 4000)
+
+    return () => {
+      clearInterval(presenceTimer)
+      client.deactivate()
+    }
   }, [roomId, senderId])
 
   const sendEvent = useCallback((event: Omit<PlayerEvent, 'senderId'>) => {

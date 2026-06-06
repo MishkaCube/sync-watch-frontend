@@ -2,11 +2,12 @@ export type SourceType = 'youtube' | 'url' | 'file'
 
 export interface PlayerEvent {
   type: 'play' | 'pause' | 'seek' | 'source-change' | 'source-reset'
-      | 'buffering-start' | 'buffering-end' | 'ready'
+      | 'buffering-start' | 'buffering-end' | 'ready' | 'presence'
   currentTime: number
   senderId: string
   sourceType?: SourceType
   sourceValue?: string
+  quality?: ConnQuality
 }
 
 export interface ClockEvent {
@@ -33,6 +34,18 @@ export interface ChatMessage {
   senderId: string
   text: string
   ts: number      // server epoch millis
+}
+
+export type ConnQuality = 'good' | 'normal' | 'weak'
+
+export interface LobbyUser {
+  id: string
+  quality: ConnQuality
+}
+
+export interface LobbyEvent {
+  type: 'lobby'
+  users: LobbyUser[]
 }
 
 export interface Room {

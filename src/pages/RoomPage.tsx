@@ -11,6 +11,7 @@ import BackendDownOverlay from '../components/BackendDownOverlay'
 import JoiningOverlay from '../components/JoiningOverlay'
 import RoomNotFound from '../components/RoomNotFound'
 import ChatPanel from '../components/ChatPanel'
+import LobbyPanel from '../components/LobbyPanel'
 import Avatar from '../components/Avatar'
 import { useSync } from '../hooks/useSync'
 import { useRoomClock } from '../hooks/useRoomClock'
@@ -19,7 +20,7 @@ import { useTheme } from '../hooks/useTheme'
 import { hlsWarmup, getConfig, getRoom } from '../lib/api'
 import { toProxiedUrl } from '../lib/hls'
 import type { PlayerHandle } from '../components/YouTubePlayer'
-import type { ChatMessage, ClockEvent, PlayerEvent, SourceType } from '../lib/types'
+import type { ChatMessage, ClockEvent, LobbyUser, PlayerEvent, SourceType } from '../lib/types'
 import { getExpectedPosition } from '../lib/types'
 
 const senderId = uuidv4()
@@ -41,6 +42,7 @@ export default function RoomPage() {
   const [bufferingCount, setBufferingCount] = useState(0)
   const [rezkaEnabled, setRezkaEnabled] = useState(true)
   const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [lobby, setLobby] = useState<LobbyUser[]>([])
   const [joining, setJoining] = useState(true)   // "connecting to session" overlay
   const [roomStatus, setRoomStatus] = useState<'checking' | 'ok' | 'notfound'>('checking')
 
@@ -179,6 +181,7 @@ export default function RoomPage() {
         }, 500)
       }
     }, []),
+    onLobby: useCallback((users: LobbyUser[]) => setLobby(users), []),
     onDisconnect: useCallback(() => setConnected(false), []),
     onReconnect: useCallback(() => setConnected(true), []),
   })
@@ -372,6 +375,9 @@ export default function RoomPage() {
               ? <RezkaPicker onSource={handleSource} />
               : <SourcePicker roomId={roomId!} currentSource={source?.value} onSource={handleSource} />}
           </div>
+
+          {/* Lobby — who's here + connection quality */}
+          <LobbyPanel users={lobby} myId={senderId} />
 
           {/* Chat */}
           <ChatPanel messages={messages} myId={senderId} onSend={sendChat} />
